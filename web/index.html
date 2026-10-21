@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="rename-token" content="__RENAME_TOKEN__">
+  <meta name="description" content="Rapikan nama ratusan file dengan satu pola. Rename massal, lokal, tanpa upload.">
+  <title>Rename Studio — Rapikan nama file</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <svg class="svg-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3Z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8Zm0 0v6h5M8 14h8m-8 3h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6Zm-4 9 3 3 5-6"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M4 10h10a6 6 0 0 1 0 12M4 10l5-5m-5 5 5 5" transform="translate(0 -2)"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 5m0 2v1"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 10a8 8 0 1 0-2 8M20 4v6h-6"/></symbol>
+  </svg>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Rename Studio beranda"><span class="brand-mark">r<span>↗</span></span><span>rename<span class="brand-small">STUDIO</span></span></a>
+    <span class="nav-label">WORKSPACE</span>
+    <div class="nav-active"><svg><use href="#i-file"/></svg>Batch renamer<span class="nav-dot"></span></div>
+    <button class="nav-help" id="helpButton"><svg><use href="#i-help"/></svg>Cara menggunakan</button>
+    <div class="sidebar-bottom"><div class="privacy-icon"><svg><use href="#i-shield"/></svg></div><strong>File kamu, tetap di sini.</strong><p>Semua proses berjalan lokal di komputer kamu.</p><span class="version">RENAME STUDIO <span>v1.0</span></span></div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong>Batch renamer</strong></div><div class="topbar-actions"><button class="icon-button mobile-help" id="mobileHelp" aria-label="Cara menggunakan"><svg><use href="#i-help"/></svg></button><span class="connection" id="connection"><i></i>Menghubungkan…</span></div></header>
+    <main>
+      <section class="intro"><div><div class="eyebrow">LESS CLUTTER, MORE ORDER</div><h1>Nama acak. <span>Jadi rapi.</span></h1><p>Satu pola nama untuk semua file. Lebih cepat, lebih teratur.</p></div><button class="button button-light demo-button" id="demoButton">Coba contoh <svg><use href="#i-arrow"/></svg></button></section>
+      <div class="steps" aria-label="Langkah rename"><span class="current"><b>01</b> Pilih folder</span><i></i><span><b>02</b> Atur pola nama</span><i></i><span><b>03</b> Tinjau & rename</span></div>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <section class="folder-card" id="folderCard" aria-label="Folder sumber">
+        <div class="folder-art"><svg><use href="#i-folder"/></svg></div>
+        <div class="folder-info"><h2 id="folderName">Mulai dari satu folder</h2><p id="folderDescription">Pilih folder berisi file yang ingin kamu rapikan.</p><span id="folderMeta" hidden></span></div>
+        <div class="folder-actions"><button class="icon-button" id="refreshButton" title="Muat ulang folder" aria-label="Muat ulang folder" hidden><svg><use href="#i-refresh"/></svg></button><button class="button button-dark" id="folderButton"><svg><use href="#i-folder"/></svg><span>Pilih folder</span></button></div>
+        <details class="path-details"><summary>Atau masukkan lokasi folder</summary><form id="pathForm"><input id="folderPath" aria-label="Lokasi folder" placeholder="Contoh: D:\Aset\Ilustrasi" autocomplete="off"><button class="button button-light" type="submit">Buka</button></form></details>
+      </section>
+      <div class="workspace-grid">
+        <section class="settings-card card"><div class="section-heading"><span class="step-number">02</span><h2>Pola penamaan</h2></div><p class="section-description">Bikin pola. Kami urus urutannya.</p>
+          <label for="prefix">Nama custom <span class="required">*</span></label><input id="prefix" type="text" value="EV_SB" maxlength="180" spellcheck="false" autocomplete="off"><p class="field-hint">Tulis persis sesuai keinginan, termasuk _ atau -.</p>
+          <div class="form-row"><div><label for="start">Mulai dari</label><input id="start" type="number" min="1" max="999999999" value="1"></div><div><label for="digits">Jumlah digit</label><select id="digits"><option value="auto">Otomatis</option><option value="2">Min. 2 digit</option><option value="3">Min. 3 digit</option><option value="4">Min. 4 digit</option><option value="5">Min. 5 digit</option><option value="6">Min. 6 digit</option></select></div></div>
+          <label for="order">Urutan file</label><select id="order"><option value="name">Nama asli (A → Z)</option><option value="name-desc">Nama asli (Z → A)</option><option value="date">Tanggal (terlama dahulu)</option><option value="date-desc">Tanggal (terbaru dahulu)</option><option value="type">Jenis file, lalu nama</option></select>
+          <div class="pattern-example"><span>POLA HASIL</span><div><strong id="patternName">EV_SB</strong><b id="patternNumber">01</b><em>.ext</em></div><p id="digitHint">Digit otomatis mengikuti nomor terakhir.</p></div>
+          <div id="validation" class="validation" role="status" hidden></div>
+          <div class="setting-foot"><svg><use href="#i-shield"/></svg><p>Ekstensi & isi file tetap.<br>Hanya namanya yang berubah.</p></div>
+        </section>
+        <section class="preview-card card"><div class="preview-header"><div class="section-heading"><span class="step-number">03</span><h2>Pratinjau perubahan</h2><span class="count-badge" id="fileCount">0 file</span></div><span class="live-label"><i></i>LIVE PREVIEW</span></div>
+          <div class="table-tools"><div class="filter-chips" id="filters" aria-label="Filter format file"><button class="chip active" data-ext="all">Semua</button></div><div class="search-field"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="Cari file…" aria-label="Cari nama file"></div></div>
+          <div class="selection-bar"><label><input id="selectAll" type="checkbox" disabled><span id="selectedLabel">Belum ada file dipilih</span></label><button id="clearButton" class="text-button" disabled>Kosongkan</button></div>
+          <div class="table-scroll"><table><thead><tr><th class="checkbox-col"><span class="sr-only">Pilihan</span></th><th>Nama asli</th><th class="arrow-col"></th><th>Nama baru</th><th class="size-col">Ukuran</th></tr></thead><tbody id="fileRows"></tbody></table>
+            <div class="empty-state" id="emptyState"><div class="empty-illustration"><span class="paper back"></span><span class="paper front"><i></i><i></i><i></i></span><b>↗</b></div><h3>File berantakan? Bereskan di sini.</h3><p>Pilih folder untuk melihat nama asli<br>dan pratinjau nama barunya.</p><span class="format-list">AI <i>·</i> EPS <i>·</i> PNG <i>·</i> JPG <i>·</i> MP4 <i>·</i> + lainnya</span></div>
+          </div>
+          <div class="pagination" id="pagination" hidden><span id="pageInfo"></span><div><button class="icon-button" id="previousPage" aria-label="Halaman sebelumnya">←</button><button class="icon-button" id="nextPage" aria-label="Halaman berikutnya">→</button></div></div>
+          <div class="preview-footer"><div><strong id="summaryTitle">Siap saat kamu siap.</strong><p id="summaryDescription">Perubahan belum dijalankan.</p></div><button class="button button-mint" id="reviewButton" disabled>Tinjau perubahan <svg><use href="#i-arrow"/></svg></button></div>
+        </section>
+      </div>
+      <div class="bottom-bar"><span><svg><use href="#i-check"/></svg>Tanpa upload <i>·</i> Semua format <i>·</i> Langsung di folder asal</span><button class="text-button undo-button" id="undoButton" disabled><svg><use href="#i-undo"/></svg>Urungkan batch terakhir</button></div>
+    </main><footer class="app-footer">A little order goes a long way.<span>BUILT FOR YOUR WORKFLOW</span></footer>
+  </div>
+  <dialog id="confirmDialog"><div class="dialog-header"><span class="eyebrow" id="dialogEyebrow">SATU LANGKAH LAGI</span><h2 id="dialogTitle">Tinjau perubahan</h2><p id="dialogDescription"></p></div><div class="dialog-path" id="dialogPath"></div><div class="dialog-mapping" id="dialogMapping"></div><p class="dialog-note" id="dialogNote">Nama file akan langsung berubah di folder asal. Batch terakhir dapat diurungkan selama file tidak berubah.</p><div class="dialog-actions"><button class="button button-light" id="cancelButton">Batal</button><button class="button button-mint" id="confirmButton">Ya, rename sekarang</button></div></dialog>
+  <dialog id="helpDialog"><div class="dialog-header"><span class="eyebrow">QUICK GUIDE</span><h2>Rapi dalam tiga langkah.</h2></div><ol class="help-list"><li><strong>Pilih folder</strong><p>Semua file di dalamnya ditampilkan. Subfolder dan symlink dilewati.</p></li><li><strong>Atur pola nama</strong><p>Misalnya EV_SB dengan nomor awal 1. Sepuluh file menjadi EV_SB01 sampai EV_SB10. Seratus file otomatis memakai 001 sampai 100.</p></li><li><strong>Tinjau, lalu rename</strong><p>Centang file yang ingin diubah. Periksa pratinjau dan konfirmasikan perubahan. File yang tidak dicentang tetap menggunakan nama awal.</p></li></ol><p class="dialog-note">Selesai? Gunakan Urungkan batch terakhir jika perlu. Undo ditolak jika file sudah berubah atau nama awal dipakai file lain. Tutup aplikasi dengan Ctrl+C pada jendela server.</p><div class="dialog-actions"><button class="button button-dark" id="closeHelp">Mengerti</button></div></dialog>
+</body>
+</html>
