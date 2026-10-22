@@ -35,4 +35,4 @@
 - OAuth CLI dapat deploy Worker, tetapi endpoint Workers Builds menolak akses (403). Pengguna diminta mengubah Build command dashboard dari rename-studio ke npm run build. Jangan memperluas scope/menyimpan token dalam source untuk mengatasi ini.
 
 ## Berikutnya
-Deployment dan verifikasi produksi selesai. Menunggu konfirmasi pengguna bahwa Build command dashboard sudah diganti menjadi npm run build (Deploy = npx wrangler deploy; Root = /). Pipeline Git otomatis belum terverifikasi; jangan menyatakan status build otomatis hijau. Source aplikasi yang diterbitkan ada pada commit 68a9766. Lanjutkan dari checkout yang sama.
+Deployment dan verifikasi produksi selesai. Pengguna mengonfirmasi Build command dashboard sudah diganti menjadi npm run build (Deploy = npx wrangler deploy; Root = /). Pipeline Git otomatis sedang diperiksa lewat GitHub checks; jangan menyatakan hijau sebelum hasil teramati. Source aplikasi yang diterbitkan ada pada commit 68a9766. Lanjutkan dari checkout yang sama.
