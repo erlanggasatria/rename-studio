@@ -1,5 +1,7 @@
 const $ = id => document.getElementById(id);
 const token = document.querySelector('meta[name="rename-token"]').content;
+const cloudMode = document.querySelector('meta[name="rename-mode"]')?.content === 'cloud';
+let cloudBatch = null;
 const state = { files: [], selected: new Set(), folder: '', demo: false, filter: 'all', page: 0, busy: false, undo: null, ticket: null, action: 'rename', plan: [] };
 const pageSize = 40;
 function naturalCompare(a, b) {
@@ -30,6 +32,9 @@ function size(bytes) {
   }
 }
 async function api(path, data) {
+  if (cloudMode && path === 'preview') {
+    return { ...window.RenameCloud.makePlan(state.files, data), ticket: crypto.randomUUID() };
+  }
   const response = await fetch('/api/' + path, {
     method: data === undefined ? 'GET' : 'POST',
     headers: { 'X-Rename-Token': token, 'Content-Type': 'application/json' },
@@ -119,9 +124,9 @@ function render() {
   $('selectAll').setAttribute('aria-label', 'Pilih semua file yang cocok dengan filter, di semua halaman');
   $('clearButton').disabled = !state.files.length || state.busy;
   $('reviewButton').disabled = !selected || !!plan.error || state.busy || !plan.changed;
-  $('reviewButton').replaceChildren(document.createTextNode(state.demo ? 'Gunakan folder asli →' : `Tinjau ${selected || ''} perubahan →`));
+  $('reviewButton').replaceChildren(document.createTextNode(state.demo ? 'Gunakan folder asli →' : cloudMode ? `Tinjau & buat skrip →` : `Tinjau ${selected || ''} perubahan →`));
   $('summaryTitle').textContent = state.files.length ? `${plan.changed} nama akan berubah.` : 'Siap saat kamu siap.';
-  $('summaryDescription').textContent = state.demo ? 'Mode contoh · file asli belum dipilih.' : 'Perubahan belum dijalankan.';
+  $('summaryDescription').textContent = state.demo ? 'Mode contoh · file asli belum dipilih.' : cloudMode ? 'Jalankan skrip unduhan di Windows untuk menerapkan.' : 'Perubahan belum dijalankan.';
   $('patternName').textContent = $('prefix').value || 'NamaCUSTOM';
   $('patternNumber').textContent = String(Number.isInteger(plan.start) && plan.start > 0 ? plan.start : 1).padStart(plan.width, '0');
   $('digitHint').textContent = selected ? `${plan.width} digit untuk ${selected} file terpilih. Ekstensi asli tetap.` : '10 file → 01–10 · 100 file → 001–100';
@@ -190,6 +195,7 @@ function showMapping(entries) {
   }
 }
 async function chooseFolder() {
+  if (cloudMode) { $('browserFolder').click(); return; }
   notice('Pilih folder pada jendela yang terbuka. Jika jendelanya tidak terlihat, gunakan kolom lokasi folder.');
   await task(async () => { const result = await api('pick-folder', {}); if (!result.cancelled) { load(result); notice(''); } else notice('Pemilihan folder dibatalkan.'); });
 }
@@ -198,7 +204,18 @@ $('pathForm').addEventListener('submit', event => {
   event.preventDefault();
   task(async () => { load(await api('folder', { path: $('folderPath').value })); notice(''); });
 });
-$('refreshButton').addEventListener('click', () => task(async () => { load(await api('folder', { path: state.folder })); notice('Folder dimuat ulang. Semua file kembali dipilih.'); }));
+$('refreshButton').addEventListener('click', () => {
+  if (cloudMode) { chooseFolder(); return; }
+  task(async () => { load(await api('folder', { path: state.folder })); notice('Folder dimuat ulang. Semua file kembali dipilih.'); });
+});
+$('browserFolder').addEventListener('change', () => {
+  try {
+    const result = window.RenameCloud.folderMetadata($('browserFolder').files);
+    load(result);
+    notice('Nama, ukuran, dan waktu file dibaca untuk pratinjau di browser. Isi file tidak diunggah. Setelah membuat skrip, pilih folder yang sama saat menjalankannya di Windows.');
+  } catch (error) { notice(error.message, 'error'); }
+  finally { $('browserFolder').value = ''; }
+});
 for (const id of ['prefix', 'start', 'digits', 'order']) $(id).addEventListener('input', () => { state.ticket = null; state.page = 0; render(); });
 $('search').addEventListener('input', () => { state.page = 0; render(); });
 $('selectAll').addEventListener('change', event => { for (const file of filterFiles()) event.target.checked ? state.selected.add(file.id) : state.selected.delete(file.id); render(); });
@@ -218,11 +235,11 @@ $('reviewButton').addEventListener('click', () => {
     const result = await api('preview', { selected: [...state.selected], prefix: $('prefix').value, start: Number($('start').value), digits: $('digits').value, order: $('order').value });
     state.ticket = result.ticket; state.action = 'rename'; state.plan = result.plan;
     $('dialogEyebrow').textContent = 'SATU LANGKAH LAGI';
-    $('dialogTitle').textContent = `Rename ${result.changed} file?`;
+    $('dialogTitle').textContent = cloudMode ? `Buat skrip untuk ${result.changed} file?` : `Rename ${result.changed} file?`;
     $('dialogDescription').textContent = `${result.plan.length} file dipilih · ${result.digits} digit · ekstensi tetap.`;
     $('dialogPath').textContent = state.folder;
-    $('dialogNote').textContent = 'Nama file akan langsung berubah di folder asal. Batch terakhir dapat diurungkan selama file tidak berubah. Tutup aplikasi lain yang sedang mengedit file ini.';
-    $('confirmButton').textContent = 'Ya, rename sekarang';
+    $('dialogNote').textContent = cloudMode ? 'Web akan mengunduh skrip .cmd. File belum berubah. Klik dua kali skrip tersebut di Windows, pilih folder yang sama, lalu ketik RENAME untuk menerapkan. Untuk undo, jalankan skrip yang sama kembali.' : 'Nama file akan langsung berubah di folder asal. Batch terakhir dapat diurungkan selama file tidak berubah. Tutup aplikasi lain yang sedang mengedit file ini.';
+    $('confirmButton').textContent = cloudMode ? 'Unduh skrip rename' : 'Ya, rename sekarang';
     showMapping(result.plan);
     notice(''); $('confirmDialog').showModal();
   });
@@ -231,12 +248,12 @@ $('undoButton').addEventListener('click', () => {
   if (!state.undo) return;
   state.action = 'undo';
   $('dialogEyebrow').textContent = 'KEMBALI KE NAMA AWAL';
-  $('dialogTitle').textContent = `Urungkan ${state.undo.count} file?`;
+  $('dialogTitle').textContent = cloudMode ? `Unduh skrip undo?` : `Urungkan ${state.undo.count} file?`;
   $('dialogDescription').textContent = 'Mengembalikan nama sebelum batch rename terakhir.';
   $('dialogPath').textContent = state.undo.folder;
   $('dialogMapping').replaceChildren();
-  $('dialogNote').textContent = 'Undo ditolak jika file sudah berubah atau nama awal dipakai file lain. Isi file tidak diubah. Undo tidak dapat diulang setelah berhasil.';
-  $('confirmButton').textContent = 'Ya, urungkan batch';
+  $('dialogNote').textContent = cloudMode ? 'Jalankan skrip undo di Windows dan pilih folder yang sama. Jurnal dari skrip rename harus tetap ada di folder tersebut. Web tidak dapat mengetahui apakah skrip rename sudah dijalankan.' : 'Undo ditolak jika file sudah berubah atau nama awal dipakai file lain. Isi file tidak diubah. Undo tidak dapat diulang setelah berhasil.';
+  $('confirmButton').textContent = cloudMode ? 'Unduh skrip undo' : 'Ya, urungkan batch';
   $('confirmDialog').showModal();
 });
 $('cancelButton').addEventListener('click', () => $('confirmDialog').close());
@@ -245,6 +262,14 @@ $('confirmButton').addEventListener('click', () => task(async () => {
   const undo = state.action === 'undo';
   // Close the dialog so request errors remain visible in the page status.
   $('confirmDialog').close();
+  if (cloudMode) {
+    const nextBatch = undo ? cloudBatch : { id: state.ticket, folderName: state.folder, entries: state.plan };
+    await window.RenameCloud.download(nextBatch, undo ? 'undo' : 'rename');
+    cloudBatch = nextBatch;
+    state.undo = { folder: cloudBatch.folderName, count: cloudBatch.entries.filter(item => item.source !== item.target).length };
+    notice(undo ? 'Skrip undo diunduh. Jalankan di Windows, pilih folder yang sama, lalu ketik UNDO.' : 'Skrip rename diunduh. File belum berubah: jalankan .cmd di Windows, pilih folder yang sama, lalu ketik RENAME. Simpan skrip dan jurnal untuk undo.');
+    return;
+  }
   const result = await api(undo ? 'undo' : 'apply', undo ? {} : { ticket: state.ticket });
   state.undo = result.undo;
   load(result);
@@ -260,7 +285,22 @@ $('helpButton').addEventListener('click', () => $('helpDialog').showModal());
 $('mobileHelp').addEventListener('click', () => $('helpDialog').showModal());
 $('closeHelp').addEventListener('click', () => $('helpDialog').close());
 render();
-api('status').then(result => {
+if (cloudMode) {
+  $('connection').replaceChildren(node('i'), document.createTextNode('Web · Skrip Windows'));
+  document.querySelector('.path-details').hidden = true;
+  $('undoButton').replaceChildren(document.createTextNode('Unduh skrip undo'));
+  document.querySelector('.steps>span:last-child').lastChild.textContent = ' Tinjau & unduh skrip';
+  const list = $('helpDialog').querySelector('.help-list');
+  list.replaceChildren();
+  for (const [title, text] of [
+    ['Pilih folder & atur pola', 'Browser membaca nama, ukuran, dan waktu file di tingkat pertama folder. Isi file tidak diunggah. Subfolder dilewati.'],
+    ['Unduh skrip', 'Periksa pratinjau lalu klik Unduh skrip rename. Mengunduh skrip belum mengubah file.'],
+    ['Jalankan di Windows', 'Klik dua kali file .cmd, pilih folder yang sama, periksa daftar nama, lalu ketik RENAME. Tidak perlu Python atau upload.'],
+    ['Urungkan jika perlu', 'Jalankan ulang .cmd yang sama, pilih folder yang sama, lalu ketik UNDO. Jurnal .rename-studio-*.json harus tetap tersimpan di folder aset.']
+  ]) { const item = node('li'); item.append(node('strong', '', title), node('p', '', text)); list.append(item); }
+  $('helpDialog').querySelector('.dialog-note').textContent = 'Skrip hanya mengganti nama; tidak menyalin isi file. File yang berubah sejak dipilih atau nama tujuan yang bentrok akan ditolak. Setelah menjalankan skrip, pilih folder kembali di web untuk melihat hasil terbaru.';
+  notice('Versi web: pilih folder, atur nama, lalu unduh skrip untuk dijalankan di Windows. Semua file tetap di komputer; web tidak langsung menerapkan rename.');
+} else api('status').then(result => {
   state.undo = result.undo;
   $('connection').replaceChildren(node('i'), document.createTextNode('Berjalan lokal'));
   render();

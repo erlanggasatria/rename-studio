@@ -8,5 +8,6 @@
 - Jangan simpan token, password, API key, atau data folder pengguna dalam Git.
 - Uji rename hanya pada folder sementara buatan pengujian; jangan mengubah file milik pengguna untuk pengujian.
 - Pertahankan server pada loopback, validasi token serta Origin, dan jangan menimpa file saat rename atau undo.
+- Mode Cloudflare hanya mempublikasikan dist/ melalui allowlist build. Jangan mengunggah Python server, file konteks AI, .runtime/, atau kredensial. Mode web mengunduh skrip; jangan menyatakan file sudah berubah saat skrip baru diunduh.
 - Sebutkan pengujian yang benar-benar dilakukan, batasan, dan pekerjaan tersisa.
 - Hindari dua agent mengedit file yang sama bersamaan.

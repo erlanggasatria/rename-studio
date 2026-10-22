@@ -1,0 +1,16 @@
+{
+  "name": "rename-studio",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Rename Studio: local app and Cloudflare static web with Windows rename scripts",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/cloud.test.cjs",
+    "preview": "wrangler dev --port 8787",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.3"
+  },
+  "engines": { "node": ">=22" }
+}

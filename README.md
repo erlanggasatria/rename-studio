@@ -1,6 +1,43 @@
 # Rename Studio
 
-Web lokal untuk mengganti nama banyak file dalam satu folder menjadi nama custom + nomor berurutan. Isi file dan ekstensi asli tidak diubah; file tidak diunggah atau disalin ke server cloud.
+Mengganti nama banyak file dalam satu folder menjadi nama custom + nomor berurutan. Tersedia dua mode: aplikasi lokal Python untuk rename langsung, serta web Cloudflare yang membuat skrip Windows. Isi file dan ekstensi asli tidak diubah; file tidak diunggah atau disalin ke server cloud.
+
+## Versi web Cloudflare (tanpa Python)
+
+1. Buka web, klik **Pilih folder**, lalu atur pola nama dan pilihan file. Browser hanya memakai nama, ukuran, serta waktu modifikasi file untuk pratinjau; tidak mengunggah isi file.
+2. Klik **Tinjau & buat skrip**, periksa nama, lalu **Unduh skrip rename**.
+3. Klik dua kali file **Rename-Studio-....cmd** di Windows. Pilih **folder yang sama** ketika diminta, periksa daftar nama, lalu ketik **RENAME** untuk menjalankan.
+4. Untuk undo, jalankan file `.cmd` yang sama kembali dan pilih folder yang sama, lalu ketik **UNDO**. Bisa juga mengunduh skrip undo pada halaman selama sesi tersebut masih terbuka.
+
+Mengunduh skrip belum mengubah nama file. Setelah menjalankan skrip, pilih folder kembali di web untuk melihat hasil terbaru. Web tidak mengetahui apakah skrip telah dijalankan. Format `.cmd` memakai Windows PowerShell 5.1 bawaan Windows, tanpa mengubah execution policy dan tanpa Python/npm di komputer pengunjung.
+
+Skrip menyimpan jurnal `.rename-studio-<batch-id>.json` di folder aset untuk undo dan pemulihan. Pertahankan jurnal bersama file aset; nama tersebut otomatis dilewati oleh web. Jika proses terputus, jalankan **skrip batch yang sama** lagi, pilih folder yang sama, lalu ikuti pemulihan. Undo memeriksa ukuran, waktu modifikasi serta waktu pembuatan file. Jika identitas tidak dapat dipastikan saat pemulihan, skrip berhenti dengan jurnal tetap tersimpan. Jangan mengedit aset selama rename atau menjalankan dua batch bersamaan.
+
+## Deploy ke Cloudflare Workers
+
+Repository menyertakan `package.json`, `package-lock.json`, `scripts/build.mjs`, dan `wrangler.jsonc`. Build menyalin hanya tujuh aset publik ke `dist/`; server Python, jurnal, file konteks AI, `.git`, serta kredensial tidak dipublikasikan.
+
+Gunakan pengaturan berikut pada **Workers & Pages → rename-studio → Settings → Build**:
+
+| Pengaturan | Nilai |
+| --- | --- |
+| Production branch | `main` |
+| Root directory | `/` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+
+`rename-studio` adalah nama proyek dan bukan perintah build. Cloudflare Workers tidak menjalankan server Python desktop atau mengakses drive komputer pengunjung. Karena itu, build Cloudflare menggunakan mode skrip Windows; versi Python tetap digunakan dengan launcher lokal.
+
+Untuk deploy dari terminal pengembang (Node.js 22+):
+
+```powershell
+npm ci
+npm run build
+npx wrangler login
+npm run deploy
+```
+
+Untuk mengecek output tanpa deploy: `npx wrangler deploy --dry-run`. Untuk preview: `npm run preview`. Pengaturan **Build command di dashboard** harus benar meskipun deploy CLI sudah berhasil, karena Workers Builds menjalankan perintah tersebut sebelum perintah deploy.
 
 ## Mulai di Windows
 
