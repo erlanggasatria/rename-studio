@@ -1,7 +1,7 @@
 # State
 
 ## Status
-22 Oktober 2026: versi Cloudflare siap, pengujian lolos; push dan deployment produksi sedang diselesaikan. Versi lokal Python tetap tersedia. Repository privat: https://github.com/erlanggasatria/rename-studio.
+22 Oktober 2026: versi Cloudflare berhasil dipush dan diterbitkan di https://rename-studio.dewagderlangga.workers.dev. Version ID f8b6b6e4-2049-4f50-9f46-98565b2fa3e0. Versi lokal Python tetap tersedia. Repository privat: https://github.com/erlanggasatria/rename-studio.
 
 ## Keputusan pengguna
 - Buat repo baru, nama bebas.
@@ -24,6 +24,7 @@
 - 13 pengujian Node/Windows tambahan lolos, termasuk rename+undo 100 file dengan isi tetap, bentrok, file berubah, rerun untuk undo, dan simulasi pemulihan jurnal. Total 44 pengujian (31 Python + 13 Node/PowerShell).
 - Browser mode Cloudflare: pemilihan folder fixture 10 file, preview, dan unduhan .cmd berhasil; tidak ada error/warning console.
 - Build dan wrangler deploy --dry-run lolos. Login Cloudflare berhasil pada akun dengan Worker rename-studio.
+- Deployment produksi berhasil melalui Wrangler. Browser produksi memverifikasi pilih folder fixture 10 file, preview, serta unduhan .cmd; tidak ada error/warning console.
 
 ## Batas verifikasi
 - Tombol folder memakai dialog native Tkinter; input lokasi folder telah diuji lewat browser, dialog native belum dioperasikan otomatis.
@@ -34,4 +35,4 @@
 - OAuth CLI dapat deploy Worker, tetapi endpoint Workers Builds menolak akses (403). Pengguna diminta mengubah Build command dashboard dari rename-studio ke npm run build. Jangan memperluas scope/menyimpan token dalam source untuk mengatasi ini.
 
 ## Berikutnya
-Selesaikan push dan deployment produksi, verifikasi URL, serta catat hasil. Pengaturan dashboard Build command = npm run build; Deploy = npx wrangler deploy; Root = /. Lanjutkan dari checkout yang sama. Jangan menjalankan dua batch pada folder aset yang sama bersamaan.
+Deployment dan verifikasi produksi selesai. Menunggu konfirmasi pengguna bahwa Build command dashboard sudah diganti menjadi npm run build (Deploy = npx wrangler deploy; Root = /). Pipeline Git otomatis belum terverifikasi; jangan menyatakan status build otomatis hijau. Source aplikasi yang diterbitkan ada pada commit 68a9766. Lanjutkan dari checkout yang sama.
